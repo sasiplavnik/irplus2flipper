@@ -104,6 +104,19 @@ class Command():
             self.command = command_str.decode('ascii')
             self.address = add_str.decode('ascii')
             return
+        elif self.format == "XIAOMI_IR":
+            self.type_ = "parsed"
+            self.protocol = "NEC"
+            data_split = data.split(" ")
+            address = int(data_split[0], 16)
+            command = int(data_split[1], 16)
+            command_str = binascii.hexlify(
+                struct.pack("<I", command), sep=" ").upper()
+            add_str = binascii.hexlify(
+                struct.pack("<I", address), sep=" ").upper()
+            self.command = command_str.decode('ascii')
+            self.address = add_str.decode('ascii')
+            return
         else:
             raise NotImplementedError(f"{self.format} is not implemented")
 
