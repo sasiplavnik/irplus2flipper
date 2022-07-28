@@ -103,7 +103,7 @@ def generate_flipper_ir_file(device: Device) -> str:
     for command in device.commands:
         template += "#\n"
         template += f"name: {command.name}\n"
-        if command.protocol == "":
+        if command.protocol != "":
             template += f"protocol: {command.protocol}\n"
             template += f"address: {command.address}\n"
             template += f"command: {command.command}\n"
@@ -121,11 +121,11 @@ def get_device(f: BufferedReader) -> Device:
     if device is None:
         linked = soup.find("linked")
         if linked is not None:
-            asset = linked.attrs.get("asset", "")
-            path = asset.split("/")[0]
-            manufacturer = path[0]
-            device = path[1].replace(".xml", "")
-        return device
+            asset_path = linked.attrs.get("asset", None)
+            ff = open(f"ircodes/{asset_path}", "rb")
+            # Recursion goes brrr
+            device = get_device(ff)
+            return device
     manufacturer = device.attrs.get("manufacturer", "None")
     model = device.attrs.get("model", "None")
     format = device.attrs.get("format", "None")
