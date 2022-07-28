@@ -7,6 +7,19 @@ import struct
 import os
 
 
+# https://github.com/emilsoman/pronto_broadlink
+def pronto2lirc(pronto: str) -> List[str]:
+    codes = []
+    for s in pronto.split(" "):
+        codes.append(int(s, 16))
+    if codes[0] != 0:
+        raise ValueError('Pronto code should start with 0000')
+    if len(codes) != 4 + 2 * (codes[2] + codes[3]):
+        raise ValueError('Number of pulse widths does not match the preamble')
+    frequency = 1 / (codes[1] * 0.241246)
+    return [str(int(round(code / frequency))) for code in codes[4:]]
+
+
 class Command():
     name: str
     type: str
@@ -28,16 +41,13 @@ class Command():
         if self.format == "WINLIRC_RC5":
             self.type_ = "parsed"
             self.protocol = "RC5"
-
             command_int = int(data, 16)
             command = command_int & 0xff
             address = (command_int & 0xff00) >> 8
-
             command_str = binascii.hexlify(
                 struct.pack("<I", command), sep=" ").upper()
             add_str = binascii.hexlify(
                 struct.pack("<I", address), sep=" ").upper()
-
             self.command = command_str.decode('ascii')
             self.address = add_str.decode('ascii')
             return
@@ -66,11 +76,18 @@ class Command():
                 struct.pack("<I", address), sep=" ").upper()
             self.command = command_str.decode('ascii')
             self.address = add_str.decode('ascii')
+            return
         elif self.format in ["WINLIRC_RAW", "WINLIRC_RAW_T"]:
             self.type_ = "raw"
             self.protocol = ""
             self.duty_cycle = 0.33
             self.data = data
+            return
+        elif self.format == "PRONTO_HEX":
+            self.type_ = "raw"
+            self.protocol = ""
+            self.duty_cycle = 0.33
+            self.data = " ".join(pronto2lirc(data))
             return
         else:
             raise NotImplementedError(f"{self.format} is not implemented")
