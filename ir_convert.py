@@ -54,7 +54,7 @@ class Command():
             return
         elif self.format in ["WINLIRC_NEC1", "WINLIRC_NECx1"]:
             self.type_ = "parsed"
-            self.protocol = "NEC"
+            self.protocol = "NECext"
             data_split = data.split(" ")
             address = int(data_split[0], 16)
             command = int(data_split[1], 16)
@@ -92,7 +92,7 @@ class Command():
             return
         elif self.format == "YAMAHA_NEC_HEX":
             self.type_ = "parsed"
-            self.protocol = "NEC"
+            self.protocol = "NECext"
             # https://github.com/nobbin/infrared/blob/master/convert/yamahanec2lirc.py
             command_int = yamahanec_code_to_lirc(data)
             command = command_int & 0xffff
