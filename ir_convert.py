@@ -161,3 +161,6 @@ if __name__ == "__main__":
             continue
         flipper_str = generate_flipper_ir_file(device)
         os.makedirs(f"generated/{device.manufacturer}", exist_ok=True)
+        with open(f"generated/{device.manufacturer}/{device.model}.ir", "w") as fi:
+            fi.write(flipper_str)
+            print(f"Done at {fi.name}")
