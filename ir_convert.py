@@ -5,6 +5,7 @@ from typing import List, Any
 import binascii
 import struct
 import os
+from yamahanec2lirc import yamahanec_code_to_lirc
 
 
 # https://github.com/emilsoman/pronto_broadlink
@@ -88,6 +89,20 @@ class Command():
             self.protocol = ""
             self.duty_cycle = 0.33
             self.data = " ".join(pronto2lirc(data))
+            return
+        elif self.format == "YAMAHA_NEC_HEX":
+            self.type_ = "parsed"
+            self.protocol = "NEC"
+            # https://github.com/nobbin/infrared/blob/master/convert/yamahanec2lirc.py
+            command_int = yamahanec_code_to_lirc(data)
+            command = command_int & 0xffff
+            address = (command_int & 0xffff0000) >> 16
+            command_str = binascii.hexlify(
+                struct.pack("<I", command), sep=" ").upper()
+            add_str = binascii.hexlify(
+                struct.pack("<I", address), sep=" ").upper()
+            self.command = command_str.decode('ascii')
+            self.address = add_str.decode('ascii')
             return
         else:
             raise NotImplementedError(f"{self.format} is not implemented")
