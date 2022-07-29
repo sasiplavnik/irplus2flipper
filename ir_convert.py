@@ -8,6 +8,10 @@ import os
 from yamahanec2lirc import yamahanec_code_to_lirc
 
 
+def replace_nonascii(text: str):
+    return ''.join([i if ord(i) < 128 else '' for i in text])
+
+
 # https://github.com/emilsoman/pronto_broadlink
 def pronto2lirc(pronto: str) -> List[str]:
     codes = []
@@ -183,6 +187,13 @@ def get_device(f: BufferedReader) -> Device:
         command_name = button.attrs.get("alt", None)
         if command_name is None:
             command_name = button.attrs.get("label", None)
+        if command_name is not None:
+            command_name = replace_nonascii(command_name)
+            command_name = command_name.strip()
+        else:
+            continue
+        if (command_name.isascii() is not True) or len(command_name) == 0:
+            command_name = "Unknown"
         command_data = button.text
         try:
             command = Command(
@@ -206,6 +217,7 @@ if __name__ == "__main__":
             continue
         flipper_str = generate_flipper_ir_file(device)
         os.makedirs(f"generated/{device.manufacturer}", exist_ok=True)
-        with open(f"generated/{device.manufacturer}/{device.model}.ir", "w") as fi:
-            fi.write(flipper_str)
+        with open(f"generated/{device.manufacturer}/{device.model}.ir", "wb") as fi:
+            fi.write(flipper_str.encode("ascii"))
             print(f"Done at {fi.name}")
+    print()
